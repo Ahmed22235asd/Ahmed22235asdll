@@ -1,0 +1,632 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Who Am I? – Vocabulary Game</title>
+<link href="https://fonts.googleapis.com/css2?family=Righteous&family=DM+Sans:wght@300;400;500;600&family=Cairo:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0c0c14;
+  --s1:#13131f;
+  --s2:#1a1a2e;
+  --s3:#222238;
+  --border:#2a2a45;
+  --accent:#7c3aed;
+  --accent2:#a855f7;
+  --glow:#7c3aed44;
+  --green:#10b981;
+  --red:#f43f5e;
+  --gold:#f59e0b;
+  --blue:#3b82f6;
+  --text:#f0eeff;
+  --muted:#6b6b9a;
+  --muted2:#3a3a5c;
+  --font-h:'Righteous',cursive;
+  --font-b:'DM Sans',sans-serif;
+  --font-ar:'Cairo',sans-serif;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:var(--font-b);background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden;}
+
+/* stars bg */
+body::before{
+  content:'';position:fixed;inset:0;
+  background:
+    radial-gradient(ellipse 80% 50% at 50% -10%,#7c3aed18,transparent),
+    radial-gradient(ellipse 40% 40% at 80% 80%,#3b82f610,transparent);
+  pointer-events:none;z-index:0;
+}
+
+.page{display:none;position:relative;z-index:1;}
+.page.active{display:block;animation:fadeUp .35s ease;}
+@keyframes fadeUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
+
+/* ══ SETUP ══ */
+#page-setup{max-width:680px;margin:0 auto;padding:48px 20px 80px;}
+
+.logo{
+  text-align:center;margin-bottom:44px;
+}
+.logo-title{
+  font-family:var(--font-h);font-size:clamp(2.4rem,8vw,3.8rem);
+  background:linear-gradient(135deg,#a855f7,#3b82f6,#10b981);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+  line-height:1.1;margin-bottom:8px;
+}
+.logo-sub{font-size:.78rem;letter-spacing:4px;text-transform:uppercase;color:var(--muted);font-weight:500;}
+
+.sec{margin-bottom:32px;}
+.sec-label{
+  font-size:.62rem;letter-spacing:4px;text-transform:uppercase;
+  color:var(--muted);font-weight:600;margin-bottom:12px;
+  display:flex;align-items:center;gap:10px;
+}
+.sec-label::after{content:'';flex:1;height:1px;background:var(--border);}
+
+/* CEFR */
+.cefr-grid{display:flex;gap:8px;flex-wrap:wrap;}
+.cefr-btn{
+  padding:10px 20px;border-radius:10px;border:1.5px solid var(--border);
+  background:var(--s1);color:var(--muted);font-family:var(--font-b);
+  font-size:.85rem;font-weight:600;cursor:pointer;transition:all .2s;
+}
+.cefr-btn:hover{border-color:var(--accent2);color:var(--text);}
+.cefr-btn.sel{
+  background:linear-gradient(135deg,var(--accent),var(--accent2));
+  border-color:transparent;color:#fff;
+  box-shadow:0 4px 20px var(--glow);
+}
+
+/* WORDS INPUT */
+.words-area-wrap{position:relative;}
+.words-area{
+  width:100%;min-height:130px;padding:16px 18px;
+  background:var(--s1);border:1.5px solid var(--border);border-radius:14px;
+  color:var(--text);font-family:var(--font-b);font-size:.95rem;
+  line-height:1.8;outline:none;resize:vertical;transition:border .2s;
+  direction:ltr;
+}
+.words-area:focus{border-color:var(--accent2);}
+.words-area::placeholder{color:var(--muted);font-size:.88rem;}
+.words-hint{font-size:.72rem;color:var(--muted2);margin-top:6px;margin-bottom:0;}
+
+/* CHIPS PREVIEW */
+.chips-preview{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px;min-height:4px;}
+.wchip{
+  background:var(--s2);border:1px solid var(--accent)55;
+  color:var(--accent2);padding:4px 12px;border-radius:20px;
+  font-size:.78rem;font-weight:500;direction:ltr;
+}
+
+/* START */
+.start-btn{
+  width:100%;padding:18px;border-radius:16px;border:none;
+  background:linear-gradient(135deg,var(--accent),var(--accent2));
+  color:#fff;font-family:var(--font-h);font-size:1.15rem;
+  cursor:pointer;transition:all .25s;letter-spacing:.5px;
+  box-shadow:0 8px 32px var(--glow);
+}
+.start-btn:hover{transform:translateY(-2px);box-shadow:0 12px 40px #7c3aed66;}
+.start-btn:disabled{background:var(--s2);color:var(--muted);box-shadow:none;transform:none;cursor:not-allowed;}
+
+/* ══ GAME ══ */
+#page-game{max-width:640px;margin:0 auto;padding:0 0 60px;}
+
+.game-topbar{
+  display:flex;align-items:center;gap:12px;padding:14px 20px;
+  background:var(--s1);border-bottom:1px solid var(--border);
+  position:sticky;top:0;z-index:50;
+}
+.back-btn{
+  width:34px;height:34px;border-radius:50%;border:1px solid var(--border);
+  background:transparent;color:var(--muted);cursor:pointer;font-size:.9rem;
+  display:flex;align-items:center;justify-content:center;transition:all .2s;
+}
+.back-btn:hover{border-color:var(--red);color:var(--red);}
+
+.progress-info{flex:1;}
+.prog-text{font-size:.78rem;color:var(--muted);}
+.prog-bar{height:4px;background:var(--border);border-radius:2px;margin-top:5px;overflow:hidden;}
+.prog-fill{height:100%;background:linear-gradient(90deg,var(--accent),var(--green));border-radius:2px;transition:width .5s ease;}
+
+.score-badge{
+  font-family:var(--font-h);font-size:1.1rem;
+  background:var(--s2);border:1px solid var(--border);
+  padding:6px 14px;border-radius:10px;
+  color:var(--gold);
+}
+
+/* CARD */
+.game-body{padding:24px 20px;}
+
+.word-card{
+  background:var(--s1);border:1.5px solid var(--border);border-radius:24px;
+  padding:28px 24px;margin-bottom:20px;
+  box-shadow:0 8px 40px #00000040;
+  position:relative;overflow:hidden;
+  transition:all .3s;
+}
+.word-card::before{
+  content:'';position:absolute;top:-40px;right:-40px;
+  width:140px;height:140px;border-radius:50%;
+  background:radial-gradient(circle,var(--accent)18,transparent 70%);
+  pointer-events:none;
+}
+
+.card-round{
+  font-size:.65rem;letter-spacing:3px;text-transform:uppercase;
+  color:var(--muted);font-weight:600;margin-bottom:16px;
+}
+
+/* clues */
+.clues-list{list-style:none;display:flex;flex-direction:column;gap:10px;margin-bottom:24px;}
+.clue-item{
+  display:flex;align-items:flex-start;gap:10px;
+  background:var(--s2);border:1px solid var(--border);
+  border-radius:12px;padding:12px 15px;
+  font-size:.92rem;line-height:1.65;
+  animation:clueIn .3s ease both;
+}
+@keyframes clueIn{from{opacity:0;transform:translateX(-8px)}to{opacity:1;transform:translateX(0)}}
+.clue-num{
+  font-family:var(--font-h);font-size:.85rem;color:var(--accent2);
+  flex-shrink:0;margin-top:1px;
+}
+
+/* guess input */
+.guess-row{display:flex;gap:8px;margin-bottom:14px;}
+.guess-inp{
+  flex:1;padding:14px 18px;background:var(--s2);border:1.5px solid var(--border);
+  border-radius:12px;color:var(--text);font-family:var(--font-b);font-size:1rem;
+  outline:none;transition:border .2s;direction:ltr;letter-spacing:.5px;
+}
+.guess-inp:focus{border-color:var(--accent2);}
+.guess-inp::placeholder{color:var(--muted);}
+.guess-btn{
+  padding:14px 22px;border-radius:12px;border:none;
+  background:linear-gradient(135deg,var(--accent),var(--accent2));
+  color:#fff;font-family:var(--font-b);font-size:.9rem;font-weight:600;
+  cursor:pointer;transition:all .2s;white-space:nowrap;
+}
+.guess-btn:hover{transform:scale(1.04);}
+.guess-btn:disabled{background:var(--s2);color:var(--muted);transform:none;cursor:not-allowed;}
+
+.hint-btn{
+  width:100%;padding:11px;border-radius:10px;border:1px solid var(--border);
+  background:transparent;color:var(--muted);font-family:var(--font-b);font-size:.82rem;
+  cursor:pointer;transition:all .2s;margin-bottom:14px;
+}
+.hint-btn:hover{border-color:var(--gold);color:var(--gold);}
+.hint-btn:disabled{opacity:.4;cursor:not-allowed;}
+
+/* feedback */
+.feedback{
+  border-radius:16px;padding:18px 20px;margin-bottom:16px;
+  display:none;animation:popIn .3s cubic-bezier(.34,1.56,.64,1);
+}
+@keyframes popIn{from{opacity:0;transform:scale(.9)}to{opacity:1;transform:scale(1)}}
+.feedback.show{display:block;}
+.feedback.correct{background:#10b98118;border:1.5px solid var(--green);}
+.feedback.wrong{background:#f43f5e18;border:1.5px solid var(--red);}
+.feedback.revealed{background:#f59e0b18;border:1.5px solid var(--gold);}
+
+.fb-word{font-family:var(--font-h);font-size:1.6rem;margin-bottom:6px;direction:ltr;}
+.fb-word.correct{color:var(--green);}
+.fb-word.revealed{color:var(--gold);}
+.fb-sentence{font-size:.88rem;line-height:1.7;color:var(--text);margin-bottom:8px;direction:ltr;}
+.fb-sentence .hw{color:var(--accent2);font-weight:600;font-style:italic;}
+.fb-ar{font-family:var(--font-ar);font-size:.85rem;color:var(--muted);direction:rtl;text-align:right;}
+
+.play-word-btn{
+  display:inline-flex;align-items:center;gap:6px;
+  background:var(--s2);border:1px solid var(--border);
+  color:var(--text);padding:7px 14px;border-radius:8px;
+  font-size:.78rem;cursor:pointer;transition:all .2s;
+  margin-bottom:10px;
+}
+.play-word-btn:hover{border-color:var(--accent2);color:var(--accent2);}
+
+.next-btn{
+  width:100%;padding:14px;border-radius:12px;border:none;
+  background:var(--s2);border:1.5px solid var(--border);
+  color:var(--text);font-family:var(--font-h);font-size:.95rem;
+  cursor:pointer;transition:all .2s;
+}
+.next-btn:hover{border-color:var(--accent2);color:var(--accent2);}
+
+/* ══ RESULT ══ */
+#page-result{max-width:600px;margin:0 auto;padding:40px 20px 80px;text-align:center;}
+.result-icon{font-size:4rem;margin-bottom:16px;}
+.result-title{font-family:var(--font-h);font-size:2.2rem;margin-bottom:8px;
+  background:linear-gradient(135deg,var(--accent2),var(--green));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;}
+.result-sub{color:var(--muted);margin-bottom:32px;font-size:.9rem;}
+
+.final-scores{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:28px;}
+.fs-box{background:var(--s1);border:1px solid var(--border);border-radius:14px;padding:18px;}
+.fs-n{font-family:var(--font-h);font-size:2rem;margin-bottom:4px;}
+.fs-l{font-size:.65rem;letter-spacing:2px;text-transform:uppercase;color:var(--muted);}
+
+.words-review{background:var(--s1);border:1px solid var(--border);border-radius:16px;
+  padding:20px;margin-bottom:20px;text-align:right;}
+.wr-label{font-size:.65rem;letter-spacing:3px;text-transform:uppercase;color:var(--muted);
+  margin-bottom:14px;text-align:right;font-weight:600;}
+.wr-item{display:flex;align-items:center;justify-content:space-between;
+  padding:10px 0;border-bottom:1px solid var(--border);}
+.wr-item:last-child{border-bottom:none;}
+.wr-word{font-family:var(--font-h);font-size:1rem;direction:ltr;}
+.wr-status{font-size:1.2rem;}
+
+.play-again-btn{
+  width:100%;padding:17px;border-radius:14px;border:none;
+  background:linear-gradient(135deg,var(--accent),var(--accent2));
+  color:#fff;font-family:var(--font-h);font-size:1.05rem;
+  cursor:pointer;transition:all .25s;box-shadow:0 8px 28px var(--glow);
+}
+.play-again-btn:hover{transform:translateY(-2px);}
+
+/* LOADING SKELETON */
+.skeleton{
+  background:linear-gradient(90deg,var(--s2) 25%,var(--s3) 50%,var(--s2) 75%);
+  background-size:200% 100%;animation:shimmer 1.3s infinite;
+  border-radius:8px;height:14px;margin-bottom:10px;
+}
+@keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
+
+@media(max-width:480px){
+  .final-scores{grid-template-columns:repeat(2,1fr);}
+}
+</style>
+</head>
+<body>
+
+<!-- ══ SETUP ══ -->
+<div id="page-setup" class="page active">
+  <div class="logo">
+    <div class="logo-title">Who Am I?</div>
+    <div class="logo-sub">Vocabulary Discovery Game</div>
+  </div>
+
+  <div class="sec">
+    <div class="sec-label">١. مستوى المفردات في الأسئلة</div>
+    <div class="cefr-grid">
+      <button class="cefr-btn" onclick="selCEFR('A1',this)">A1 <span style="font-size:.7rem;opacity:.6">Beginner</span></button>
+      <button class="cefr-btn" onclick="selCEFR('A2',this)">A2 <span style="font-size:.7rem;opacity:.6">Elementary</span></button>
+      <button class="cefr-btn" onclick="selCEFR('B1',this)">B1 <span style="font-size:.7rem;opacity:.6">Intermediate</span></button>
+      <button class="cefr-btn" onclick="selCEFR('B2',this)">B2 <span style="font-size:.7rem;opacity:.6">Upper-Inter</span></button>
+      <button class="cefr-btn" onclick="selCEFR('C1',this)">C1 <span style="font-size:.7rem;opacity:.6">Advanced</span></button>
+      <button class="cefr-btn" onclick="selCEFR('C2',this)">C2 <span style="font-size:.7rem;opacity:.6">Mastery</span></button>
+    </div>
+  </div>
+
+  <div class="sec">
+    <div class="sec-label">٢. الكلمات اللي عايز تتدرب عليها</div>
+    <div class="words-area-wrap">
+      <textarea class="words-area" id="words-area"
+        placeholder="اكتب الكلمات — كل كلمة في سطر أو افصل بينهم بفاصلة:&#10;&#10;ambitious&#10;resilient&#10;procrastinate&#10;eloquent&#10;perseverance"
+        oninput="parseWords()"></textarea>
+    </div>
+    <div class="words-hint">📝 اكتب كلمة واحدة أو أكتر — كل سطر = كلمة. ممكن تحط 20+ كلمة</div>
+    <div class="chips-preview" id="chips-preview"></div>
+  </div>
+
+  <button class="start-btn" id="start-btn" onclick="startGame()" disabled>
+    🎮 ابدأ اللعبة
+  </button>
+</div>
+
+<!-- ══ GAME ══ -->
+<div id="page-game" class="page">
+  <div class="game-topbar">
+    <button class="back-btn" onclick="goSetup()">←</button>
+    <div class="progress-info">
+      <div class="prog-text"><span id="prog-cur">1</span> / <span id="prog-total">10</span> كلمة</div>
+      <div class="prog-bar"><div class="prog-fill" id="prog-fill" style="width:0%"></div></div>
+    </div>
+    <div class="score-badge">⭐ <span id="score-disp">0</span></div>
+  </div>
+
+  <div class="game-body">
+    <div class="word-card" id="word-card">
+      <div class="card-round" id="card-round">Round 1</div>
+      <ul class="clues-list" id="clues-list">
+        <li class="clue-item"><span class="clue-num">#1</span><span class="skeleton" style="width:80%;height:14px;display:inline-block"></span></li>
+      </ul>
+      <div class="guess-row">
+        <input class="guess-inp" id="guess-inp" type="text" placeholder="What word am I?" dir="ltr"
+          autocomplete="off" spellcheck="false"
+          onkeydown="if(event.key==='Enter')submitGuess()">
+        <button class="guess-btn" id="guess-btn" onclick="submitGuess()">Guess →</button>
+      </div>
+      <button class="hint-btn" id="hint-btn" onclick="showHint()">💡 Get a hint (+1 clue)</button>
+    </div>
+
+    <div class="feedback" id="feedback">
+      <button class="play-word-btn" id="play-word-btn" onclick="speakWord()">🔊 Hear it</button>
+      <div class="fb-word" id="fb-word"></div>
+      <div class="fb-sentence" id="fb-sentence"></div>
+      <div class="fb-ar" id="fb-ar"></div>
+      <button class="next-btn" id="next-btn" onclick="nextWord()">Next Word →</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ RESULT ══ -->
+<div id="page-result" class="page">
+  <div class="result-icon">🏆</div>
+  <div class="result-title">Round Complete!</div>
+  <div class="result-sub" id="result-sub">—</div>
+  <div class="final-scores" id="final-scores"></div>
+  <div class="words-review" id="words-review"></div>
+  <button class="play-again-btn" onclick="goSetup()">🔄 العب تاني</button>
+</div>
+
+<script>
+// ═══ STATE ═══
+let cfg = { cefr:'', words:[] };
+let queue = [];        // shuffled words for this session
+let curIdx = 0;
+let curData = null;    // {word, clues, sentence, sentence_ar, hint}
+let cluesShown = 0;
+let score = 0;
+let results = [];      // {word, correct, hintsUsed}
+let hintsUsed = 0;
+let answered = false;
+
+// ═══ SETUP ═══
+function selCEFR(lv, el) {
+  cfg.cefr = lv;
+  document.querySelectorAll('.cefr-btn').forEach(b=>b.classList.remove('sel'));
+  el.classList.add('sel');
+  checkReady();
+}
+
+function parseWords() {
+  const raw = document.getElementById('words-area').value;
+  const words = raw.split(/[\n,]+/).map(w=>w.trim()).filter(w=>w.length>0);
+  cfg.words = [...new Set(words)]; // deduplicate
+  const preview = document.getElementById('chips-preview');
+  preview.innerHTML = cfg.words.map(w=>`<span class="wchip">${escHtml(w)}</span>`).join('');
+  checkReady();
+}
+
+function checkReady() {
+  document.getElementById('start-btn').disabled = !(cfg.cefr && cfg.words.length >= 1);
+}
+
+// ═══ PAGES ═══
+function showPage(id) {
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  window.scrollTo(0,0);
+}
+function goSetup() { showPage('page-setup'); }
+
+// ═══ GAME START ═══
+function startGame() {
+  queue = shuffle([...cfg.words]);
+  curIdx = 0; score = 0; results = [];
+  document.getElementById('score-disp').textContent = '0';
+  document.getElementById('prog-total').textContent = queue.length;
+  showPage('page-game');
+  loadWord(queue[0]);
+}
+
+async function loadWord(word) {
+  answered = false; hintsUsed = 0; cluesShown = 3;
+  document.getElementById('guess-inp').value = '';
+  document.getElementById('guess-btn').disabled = false;
+  document.getElementById('hint-btn').disabled = false;
+  document.getElementById('hint-btn').textContent = '💡 Get a hint (+1 clue)';
+  document.getElementById('feedback').className = 'feedback';
+  document.getElementById('guess-inp').disabled = false;
+
+  const cur = curIdx + 1;
+  const tot = queue.length;
+  document.getElementById('prog-cur').textContent = cur;
+  document.getElementById('prog-fill').style.width = ((cur-1)/tot*100)+'%';
+  document.getElementById('card-round').textContent = `Word ${cur} of ${tot}`;
+
+  // Show loading skeleton
+  document.getElementById('clues-list').innerHTML = [1,2,3].map(i=>`
+    <li class="clue-item"><span class="clue-num">#${i}</span>
+    <span class="skeleton" style="flex:1;height:14px;display:inline-block"></span></li>`).join('');
+
+  curData = await fetchWordData(word);
+  renderClues(cluesShown);
+  document.getElementById('guess-inp').focus();
+}
+
+async function fetchWordData(word) {
+  const cefrDesc = {
+    A1:'Use ONLY very basic everyday words (the, is, big, small, eat, live, good). Max 8 words per sentence.',
+    A2:'Use simple everyday vocabulary. Short clear sentences. Max 10 words per sentence.',
+    B1:'Use clear standard English. Moderate vocabulary. 10-15 words per sentence.',
+    B2:'Use varied vocabulary including some formal words. 12-18 words per sentence.',
+    C1:'Use sophisticated vocabulary, collocations, idiomatic expressions. 15-20 words per sentence.',
+    C2:'Use precise, nuanced, academic or literary vocabulary. Complex structures allowed.'
+  };
+
+  const prompt = `You are creating a "Who Am I?" vocabulary guessing game clue card.
+
+TARGET WORD: "${word}"
+VOCABULARY LEVEL for clues: ${cfg.cefr} — ${cefrDesc[cfg.cefr]}
+
+Generate clues as if the WORD ITSELF is speaking in first person ("I am...", "I have...", "People use me to...").
+The clues should go from vague → more specific.
+NEVER say the word itself or obvious root words.
+
+Return ONLY valid JSON:
+{
+  "word": "${word}",
+  "clues": [
+    "clue 1 — vague, general description",
+    "clue 2 — more specific feature",
+    "clue 3 — even more specific",
+    "clue 4 — strong hint (almost gives it away)"
+  ],
+  "sentence": "A natural example sentence using the word '${word}' in context. Highlight its meaning clearly.",
+  "sentence_ar": "ترجمة الجملة بالعربي المصري الطبيعي",
+  "fun_fact": "One short interesting fact about this word (etymology, usage, or memory trick) — max 15 words."
+}
+
+Rules:
+- All 4 clues use ONLY ${cfg.cefr}-level vocabulary
+- Clues are in first person (the word speaks)
+- Make it fun and engaging
+- sentence must contain the exact word "${word}"`;
+
+  try {
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({
+        model:'claude-sonnet-4-20250514', max_tokens:1000,
+        messages:[{role:'user',content:prompt}]
+      })
+    });
+    const data = await res.json();
+    const raw = data.content.map(b=>b.text||'').join('');
+    return JSON.parse(raw.replace(/```json|```/g,'').trim());
+  } catch(e) {
+    return {
+      word, clues:['I am a word.','Think carefully.','You can do it!','Almost there...'],
+      sentence:`This is the word ${word}.`, sentence_ar:'خطأ في التحميل', fun_fact:''
+    };
+  }
+}
+
+function renderClues(count) {
+  const clues = (curData.clues||[]).slice(0, count);
+  document.getElementById('clues-list').innerHTML = clues.map((c,i)=>`
+    <li class="clue-item" style="animation-delay:${i*.08}s">
+      <span class="clue-num">#${i+1}</span>
+      <span>${escHtml(c)}</span>
+    </li>`).join('');
+}
+
+// ═══ HINT ═══
+function showHint() {
+  if(cluesShown >= (curData.clues||[]).length) {
+    document.getElementById('hint-btn').disabled = true;
+    document.getElementById('hint-btn').textContent = 'No more hints!';
+    return;
+  }
+  cluesShown++;
+  hintsUsed++;
+  renderClues(cluesShown);
+  if(cluesShown >= (curData.clues||[]).length) {
+    document.getElementById('hint-btn').disabled = true;
+    document.getElementById('hint-btn').textContent = '🚫 No more hints';
+  }
+}
+
+// ═══ GUESS ═══
+function submitGuess() {
+  if(answered) return;
+  const inp = document.getElementById('guess-inp');
+  const guess = inp.value.trim().toLowerCase();
+  const correct = (curData.word||'').toLowerCase();
+  if(!guess) return;
+
+  const isCorrect = guess === correct || correct.startsWith(guess) && guess.length >= correct.length-2;
+  showFeedback(isCorrect, false);
+}
+
+function showFeedback(isCorrect, isReveal) {
+  answered = true;
+  document.getElementById('guess-inp').disabled = true;
+  document.getElementById('guess-btn').disabled = true;
+  document.getElementById('hint-btn').disabled = true;
+
+  const pts = isReveal ? 0 : isCorrect ? Math.max(10 - hintsUsed*2, 4) : 0;
+  if(isCorrect) score += pts;
+  document.getElementById('score-disp').textContent = score;
+
+  results.push({ word: curData.word, correct: isCorrect && !isReveal, hintsUsed });
+
+  const fb = document.getElementById('feedback');
+  fb.className = 'feedback show ' + (isReveal ? 'revealed' : isCorrect ? 'correct' : 'wrong');
+
+  const wordEl = document.getElementById('fb-word');
+  wordEl.className = 'fb-word ' + (isReveal ? 'revealed' : isCorrect ? 'correct' : '');
+  wordEl.textContent = (isReveal?'💡 ':'') + (isCorrect?'✓ ':'✗ ') + curData.word;
+
+  // highlight word in sentence
+  const sent = (curData.sentence||'').replace(
+    new RegExp(`\\b(${curData.word}\\w*)\\b`,'gi'),
+    `<span class="hw">$1</span>`
+  );
+  document.getElementById('fb-sentence').innerHTML = sent;
+  document.getElementById('fb-ar').textContent = curData.sentence_ar || '';
+
+  document.getElementById('next-btn').textContent =
+    curIdx < queue.length - 1 ? 'Next Word →' : '🏆 See Results';
+
+  fb.scrollIntoView({behavior:'smooth', block:'nearest'});
+}
+
+function speakWord() {
+  if(!curData) return;
+  window.speechSynthesis.cancel();
+  const u = new SpeechSynthesisUtterance(curData.word);
+  u.lang='en-US'; u.rate=0.8;
+  window.speechSynthesis.speak(u);
+}
+
+// ═══ NEXT ═══
+function nextWord() {
+  curIdx++;
+  if(curIdx >= queue.length) { showResult(); return; }
+  loadWord(queue[curIdx]);
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+// ═══ RESULT ═══
+function showResult() {
+  showPage('page-result');
+  const correct = results.filter(r=>r.correct).length;
+  const total = results.length;
+  const pct = Math.round(correct/total*100);
+
+  document.getElementById('result-sub').textContent =
+    pct>=80 ? 'ممتاز! أنت نجم 🌟' : pct>=50 ? 'كويس جداً، استمر! 💪' : 'تدرب أكتر وهترجع أقوى! 🔥';
+
+  const sc = n => n>=80?'var(--green)':n>=50?'var(--gold)':'var(--red)';
+  document.getElementById('final-scores').innerHTML = `
+    <div class="fs-box">
+      <div class="fs-n" style="color:${sc(pct)}">${pct}%</div>
+      <div class="fs-l">Correct</div>
+    </div>
+    <div class="fs-box">
+      <div class="fs-n" style="color:var(--accent2)">${score}</div>
+      <div class="fs-l">Score</div>
+    </div>
+    <div class="fs-box">
+      <div class="fs-n" style="color:var(--blue)">${correct}/${total}</div>
+      <div class="fs-l">Words</div>
+    </div>`;
+
+  document.getElementById('words-review').innerHTML = `
+    <div class="wr-label">كل الكلمات</div>
+    ${results.map(r=>`
+      <div class="wr-item">
+        <span class="wr-word">${escHtml(r.word)}</span>
+        <span class="wr-status">${r.correct?'✅':'❌'}</span>
+      </div>`).join('')}`;
+}
+
+// ═══ HELPERS ═══
+function shuffle(arr) {
+  for(let i=arr.length-1;i>0;i--){
+    const j=Math.floor(Math.random()*(i+1));
+    [arr[i],arr[j]]=[arr[j],arr[i]];
+  }
+  return arr;
+}
+function escHtml(t=''){
+  return String(t).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+</script>
+</body>
+</html>
